@@ -29,6 +29,10 @@ pub async fn read_backups() -> Result<BackupMap> {
 	let mut backup_map = HashMap::new();
 
 	while let Some(dir) = dirs.next_entry().await? {
+		let file_type = dir.file_type().await?;
+		if !file_type.is_dir() {
+			continue;
+		}
 		let backups = read_deeper_backup(dir.path()).await?;
 		if !backups.is_empty() {
 			let name = dir.file_name().to_string_lossy().to_string();
@@ -44,6 +48,10 @@ async fn read_deeper_backup(path: PathBuf) -> Result<Vec<Backup>> {
 	let mut backups = vec![];
 
 	while let Some(dir) = dirs.next_entry().await? {
+		let file_type = dir.file_type().await?;
+		if !file_type.is_dir() {
+			continue;
+		}
 		backups.push(Backup {
 			name: dir.file_name().to_string_lossy().to_string(),
 			path: dir.path(),
