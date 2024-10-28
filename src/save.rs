@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use tokio::fs;
 
-use crate::util::{explorer_open, file_exists, get_file_update_time};
+use crate::util::{explorer_open, get_file_update_time};
 
 #[derive(Debug, Clone)]
 pub struct Save {
@@ -18,21 +18,24 @@ pub async fn read_saves() -> Result<Vec<Save>> {
 
 	let saves_path = get_saves_path();
 
-	let sandbox_saves = read_sub_saves(saves_path.join("sandbox")).await?;
-	let tutorial_saves = read_sub_saves(saves_path.join("tutorial")).await?;
+	let mut dirs = fs::read_dir(&saves_path).await?;
 
-	saves.extend(sandbox_saves);
-	saves.extend(tutorial_saves);
+	while let Some(dir) = dirs.next_entry().await? {
+		let file_type = dir.file_type().await?;
+		if !file_type.is_dir() {
+			continue;
+		}
+		let deeper_saves = read_depper_saves(dir.path()).await?;
+		if !deeper_saves.is_empty() {
+			saves.extend(deeper_saves);
+		}
+	}
 
 	Ok(saves)
 }
 
-async fn read_sub_saves(parent: PathBuf) -> Result<Vec<Save>> {
+async fn read_depper_saves(parent: PathBuf) -> Result<Vec<Save>> {
 	let mut saves = vec![];
-
-	if !file_exists(&parent).await {
-		return Ok(saves);
-	}
 
 	let mut dirs = fs::read_dir(&parent).await?;
 

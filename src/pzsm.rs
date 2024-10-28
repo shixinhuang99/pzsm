@@ -434,12 +434,12 @@ pub fn run() -> iced::Result {
 		(
 			Pzsm::default(),
 			Task::batch([
-				iced::window::get_latest().and_then(|id| {
-					if let Ok(icon) = iced::window::icon::from_file_data(
+				window::get_latest().and_then(|id| {
+					if let Ok(icon) = window::icon::from_file_data(
 						include_bytes!("../assets/icon.ico"),
 						None,
 					) {
-						iced::window::change_icon(id, icon)
+						window::change_icon(id, icon)
 					} else {
 						Task::none()
 					}
