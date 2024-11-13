@@ -16,6 +16,7 @@ path = "src/main.rs"
 anyhow = "1.0.90"
 chrono = "0.4.38"
 dircpy = "0.3.19"
+home = "0.5.9"
 iced = { version = "0.13.1", features = ["tokio", "image"] }
 tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "fs"] }
 trash = "5.1.1"
