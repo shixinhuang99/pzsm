@@ -73,3 +73,8 @@ pub async fn explorer_open(path: PathBuf) {
 pub async fn open_github_page() {
 	command!("cmd", ["/c", "start", APP_REPO]);
 }
+
+#[cfg(not(feature = "_dev"))]
+pub fn home_dir() -> Result<PathBuf> {
+	home::home_dir().ok_or(anyhow::anyhow!("Unable to get your home dir"))
+}

@@ -3,6 +3,8 @@ use std::{collections::HashMap, path::PathBuf};
 use anyhow::Result;
 use tokio::fs;
 
+#[cfg(not(feature = "_dev"))]
+use crate::util::home_dir;
 use crate::{
 	save::Save,
 	util::{
@@ -19,7 +21,7 @@ pub struct Backup {
 }
 
 pub async fn read_backups() -> Result<BackupMap> {
-	let path = get_backups_path();
+	let path = get_backups_path()?;
 
 	if !file_exists(&path).await {
 		fs::create_dir(&path).await?;
@@ -62,23 +64,23 @@ async fn read_deeper_backup(path: PathBuf) -> Result<Vec<Backup>> {
 }
 
 #[cfg(feature = "_dev")]
-fn get_backups_path() -> PathBuf {
-	let mut cwd = std::env::current_dir().unwrap();
+fn get_backups_path() -> Result<PathBuf> {
+	let mut cwd = std::env::current_dir()?;
 
 	cwd.push("tmp");
 	cwd.push("pzsm_backup");
 
-	cwd
+	Ok(cwd)
 }
 
 #[cfg(not(feature = "_dev"))]
-fn get_backups_path() -> PathBuf {
-	unimplemented!();
+fn get_backups_path() -> Result<PathBuf> {
+	Ok(home_dir()?.join("pzsm_backup"))
 }
 
 pub async fn create_backup(save: Save) -> Result<()> {
 	let name = time_now();
-	let mut path = get_backups_path();
+	let mut path = get_backups_path()?;
 
 	path.push(&save.name);
 	path.push(&name);
@@ -121,5 +123,11 @@ pub async fn delete_backup_many(paths: Vec<PathBuf>) -> Result<()> {
 }
 
 pub async fn open_backups_dir() {
-	explorer_open(get_backups_path()).await;
+	let Ok(backups_path) = get_backups_path() else {
+		return;
+	};
+	if !file_exists(&backups_path).await {
+		return;
+	}
+	explorer_open(backups_path).await;
 }
