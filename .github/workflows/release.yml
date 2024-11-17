@@ -1,0 +1,48 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "[0-9]+.*"
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-assets:
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    name: upload-assets (${{ matrix.target }})
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: Pzsm
+          target: ${{ matrix.target }}
+          build-tool: cargo
+          token: ${{ secrets.GITHUB_TOKEN }}
+          archive: $bin-$tag-$target
+          include: LICENSE,README.md
